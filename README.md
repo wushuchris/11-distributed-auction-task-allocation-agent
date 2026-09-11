@@ -101,6 +101,8 @@ The application still owns every allocation and publication decision. Model outp
 
 ## Gradio Demo
 
+**Live Space:** https://huggingface.co/spaces/FlyingNunchucks/11-distributed-auction-task-allocation-agent
+
 The business-first demo exposes:
 
 - **Task Marketplace** — task winners, scores, bid counts, rounds, messages, and execution cost,
