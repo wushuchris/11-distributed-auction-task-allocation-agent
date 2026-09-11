@@ -7,6 +7,7 @@ peers, or choose a winner.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 
@@ -23,6 +24,7 @@ class SubmissionCode(str, Enum):
     TASK_ID_MISMATCH = "task_id_mismatch"
     ROUND_MISMATCH = "round_mismatch"
     UNKNOWN_BIDDER = "unknown_bidder"
+    EXCLUDED_BIDDER = "excluded_bidder"
     CAPABILITY_MISMATCH = "capability_mismatch"
     UNREGISTERED_CAPABILITY = "unregistered_capability"
     BELOW_MINIMUM_CAPABILITY = "below_minimum_capability"
@@ -55,6 +57,7 @@ class AuctionRoundSummary:
     task_id: str
     auction_round: int
     is_open: bool
+    excluded_bidder_ids: tuple[str, ...]
     accepted_bid_ids: tuple[str, ...]
     accepted_abstention_ids: tuple[str, ...]
     response_count: int
@@ -67,9 +70,15 @@ class AuctionRoundProtocol:
         self,
         announcement: TaskAnnouncement,
         registry: PeerRegistry,
+        *,
+        excluded_bidder_ids: Iterable[str] = (),
     ) -> None:
         self._announcement = announcement
         self._registry = registry
+        self._excluded_bidder_ids = frozenset(excluded_bidder_ids)
+        for bidder_id in self._excluded_bidder_ids:
+            self._registry.require(bidder_id)
+
         self._is_open = True
         self._bids: dict[str, Bid] = {}
         self._abstentions: dict[str, BidAbstention] = {}
@@ -84,6 +93,12 @@ class AuctionRoundProtocol:
     @property
     def is_open(self) -> bool:
         return self._is_open
+
+    @property
+    def excluded_bidder_ids(self) -> tuple[str, ...]:
+        """Return protocol-enforced bidder exclusions in deterministic order."""
+
+        return tuple(sorted(self._excluded_bidder_ids))
 
     def submit_bid(self, bid: Bid) -> SubmissionReceipt:
         """Validate and, when admissible, record one bid."""
@@ -149,7 +164,7 @@ class AuctionRoundProtocol:
                 code=SubmissionCode.OVER_BUDGET,
                 detail=(
                     f"estimated cost {bid.estimated_cost:.2f} exceeds task maximum "
-                    f"{self._announcement.maximum_cost:.2f}"
+                    f"of {self._announcement.maximum_cost:.2f}"
                 ),
             )
 
@@ -212,6 +227,7 @@ class AuctionRoundProtocol:
             task_id=self._announcement.task_id,
             auction_round=self._announcement.auction_round,
             is_open=self._is_open,
+            excluded_bidder_ids=self.excluded_bidder_ids,
             accepted_bid_ids=tuple(sorted(self._bids)),
             accepted_abstention_ids=tuple(sorted(self._abstentions)),
             response_count=len(self._responded_bidder_ids),
@@ -264,6 +280,14 @@ class AuctionRoundProtocol:
                 bidder_id=bidder_id,
                 code=SubmissionCode.UNKNOWN_BIDDER,
                 detail="response came from an unregistered bidder",
+            )
+
+        if bidder_id in self._excluded_bidder_ids:
+            return self._reject(
+                submission_id=submission_id,
+                bidder_id=bidder_id,
+                code=SubmissionCode.EXCLUDED_BIDDER,
+                detail="bidder is excluded from this auction round by protocol policy",
             )
 
         if submission_id in self._response_ids:
