@@ -17,7 +17,7 @@ Distributed multi-agent task allocation using typed auctions, deterministic bidd
 
 ## Status
 
-**Complete and production-validated.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, business-first Gradio demo, test-gated deployment path, and live Hugging Face runtime have all been validated. The final automated suite passes **140 tests**, and both deterministic and live LLM-assisted production checks completed successfully.
+**Engineering production-validated; final demo presentation review in progress.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, test-gated deployment path, and live Hugging Face runtime have all been validated. The current automated suite passes **142 tests**, and both deterministic and live LLM-assisted production checks completed successfully. The remaining closeout item is final approval of the redesigned business-first demo experience.
 
 ## Problem
 
@@ -133,23 +133,26 @@ The live production path uses Hugging Face Inference Providers through the OpenA
 
 **Live Space:** https://huggingface.co/spaces/FlyingNunchucks/11-distributed-auction-task-allocation-agent
 
-The business-first demo exposes:
+The redesigned demo separates the visitor experience into a business layer first and an engineering layer underneath:
 
-- **Task Marketplace** — task winners, scores, bid counts, rounds, messages, and execution cost,
-- **Centralized vs Distributed** — controlled architecture tradeoff,
-- **Stress Evaluation** — nine deterministic scenarios,
-- **Work Products** — validated outputs from winning peers,
-- **Protocol Audit** — append-only allocation events,
-- **Engineering Boundary** — what the LLM may and may not control.
+- **Business case** — explains the fictional acquisition decision and why task allocation matters,
+- **Meet the AI team** — introduces all six peers, specialties, registered strengths, and availability,
+- **Marketplace walkthrough** — explains task announcement, BID/ABSTAIN, deterministic scoring, award, and bounded reauction,
+- **Business Walkthrough** — explains each of the five auctions in plain language and why the winner won,
+- **Auction Room** — shows every peer decision plus capability, confidence, availability, synthetic cost, score, and rank,
+- **Work Products** — shows validated outputs produced by the awarded peers,
+- **Architecture Tradeoff** — compares centralized assignment against distributed auction allocation,
+- **Stress & Recovery** — exposes the nine-scenario deterministic evaluation,
+- **Engineering Audit** — preserves the append-only protocol events and compact runtime snapshot.
 
 Deterministic mode is the safe default. LLM-assisted mode changes the substantive work products after award but does not control eligibility, bidding admission, scoring, settlement, winner selection, reauction, or publication.
 
 ## Production Validation
 
-Final automated test result:
+Current automated test result:
 
 ```text
-140 passed
+142 passed
 ```
 
 The public Hugging Face Space was manually validated in both:
@@ -166,6 +169,8 @@ The deterministic production check completed with:
 - and the expected winner path: Atlas → Ledger → Sentinel → Veritas → Quill.
 
 The live LLM-assisted production check also completed successfully while preserving the same application-controlled allocation boundary. The model changed the awarded work-product content, not the auction authority.
+
+The redesigned storytelling layer is regression-tested against the authoritative peer registry, local BID/ABSTAIN policy, and deterministic settlement function so the business explanation cannot silently diverge from the real engine.
 
 ## Reusable Primitive
 
@@ -234,7 +239,8 @@ Do not place secret values in `.env.example`, source files, commits, screenshots
 │       ├── registry.py
 │       ├── runtime.py
 │       ├── scenario.py
-│       └── settlement.py
+│       ├── settlement.py
+│       └── story.py
 └── tests/
 ```
 
