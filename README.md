@@ -17,7 +17,7 @@ Distributed multi-agent task allocation using typed auctions, deterministic bidd
 
 ## Status
 
-**Deployment-ready.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, and business-first Gradio demo are implemented and covered by automated tests. Hugging Face deployment is test-gated from GitHub `main` and safely skips until the deployment credential is configured.
+**Complete and production-validated.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, business-first Gradio demo, test-gated deployment path, and live Hugging Face runtime have all been validated. The final automated suite passes **140 tests**, and both deterministic and live LLM-assisted production checks completed successfully.
 
 ## Problem
 
@@ -39,7 +39,7 @@ The public demo uses a fictional corporate due-diligence mission for **Meridian 
 4. Evidence Verification
 5. Executive Due-Diligence Synthesis
 
-The default deterministic mission allocates the tasks to **Atlas Research → Ledger Analyst → Sentinel Risk → Veritas Evidence → Quill Synthesis**.
+The default mission allocates the tasks to **Atlas Research → Ledger Analyst → Sentinel Risk → Veritas Evidence → Quill Synthesis**.
 
 ## Deterministic Auction Policy
 
@@ -58,6 +58,28 @@ Eligibility is evaluated before scoring. Deterministic tie-breaking uses:
 
 Capability authority comes from the registry rather than bidder-provided claims.
 
+> **Validation determines who may compete. Scoring determines which valid competitor wins.**
+
+## Bounded Reauction
+
+Explicit execution failure can reopen the same logical auction for one additional round. The failed worker is excluded from the immediate retry by protocol admission rather than by mutating its long-term registry profile.
+
+The bounded lifecycle is:
+
+```text
+ANNOUNCED → BIDDING → AWARDED → IN_PROGRESS → COMPLETED
+                                  ↓
+                                FAILED
+                                  ↓
+                            REAUCTIONING
+                                  ↓
+                          BIDDING (round + 1)
+                                  ↓
+                         COMPLETED / ESCALATED
+```
+
+This is intentionally narrow recovery behavior, not a claim of general fault tolerance.
+
 ## Controlled Architecture Comparison
 
 The centralized and distributed implementations use the same peers, tasks, eligibility gates, scoring policy, executor, and bounded failure rules. Only allocation authority changes.
@@ -71,6 +93,8 @@ The centralized and distributed implementations use the same peers, tasks, eligi
 | Protocol/control messages | 50 | 10 |
 
 In the clean full-information case, both architectures select the same workers. The distributed market pays additional communication overhead in exchange for decentralized allocation authority.
+
+> **The centralized allocator spends authority. The distributed auction spends messages.**
 
 ## Stress Evaluation
 
@@ -86,9 +110,11 @@ Across the default stress suite:
 - distributed protocol messages: 390,
 - centralized control messages: 78.
 
+Under equivalent information and utility policy, the distributed auction preserves allocation quality and failure behavior in these scenarios while paying a measurable communication premium for decentralized allocation authority.
+
 ## Bounded LLM Execution
 
-LLM-assisted mode is optional and lives strictly inside the awarded-task execution boundary.
+LLM-assisted mode lives strictly inside the awarded-task execution boundary.
 
 The model may draft only:
 
@@ -98,6 +124,10 @@ The model may draft only:
 - approved evidence references.
 
 The application still owns every allocation and publication decision. Model output is validated against a strict Pydantic schema, checked against an application-owned evidence allowlist, and then validated again through the typed `WorkProduct` contract. Invalid output fails closed into the existing bounded recovery path.
+
+The live production path uses Hugging Face Inference Providers through the OpenAI-compatible router. Runtime model selection is configuration rather than auction policy.
+
+> **The auction grants authority to execute. The handler produces content. The application owns lineage and validates the result.**
 
 ## Gradio Demo
 
@@ -112,7 +142,50 @@ The business-first demo exposes:
 - **Protocol Audit** — append-only allocation events,
 - **Engineering Boundary** — what the LLM may and may not control.
 
-Deterministic mode is the safe default. LLM-assisted mode requires runtime configuration and fails closed if it is absent.
+Deterministic mode is the safe default. LLM-assisted mode changes the substantive work products after award but does not control eligibility, bidding admission, scoring, settlement, winner selection, reauction, or publication.
+
+## Production Validation
+
+Final automated test result:
+
+```text
+140 passed
+```
+
+The public Hugging Face Space was manually validated in both:
+
+- deterministic mode,
+- live LLM-assisted mode.
+
+The deterministic production check completed with:
+
+- 5/5 tasks completed,
+- 50 protocol messages,
+- $347 synthetic execution cost,
+- 1.00 allocation efficiency,
+- and the expected winner path: Atlas → Ledger → Sentinel → Veritas → Quill.
+
+The live LLM-assisted production check also completed successfully while preserving the same application-controlled allocation boundary. The model changed the awarded work-product content, not the auction authority.
+
+## Reusable Primitive
+
+> **A typed distributed task-auction protocol in which peers locally evaluate work, submit validated bids, and deterministically allocate and reallocate tasks using capability, confidence, cost, and availability without a central semantic planner.**
+
+## Scope and Known Limitations
+
+This project deliberately does **not** implement:
+
+- malicious or deceptive bidding,
+- bidder collusion,
+- long-term reputation or trust scoring,
+- Byzantine-agent detection,
+- compromised-agent isolation,
+- redundant execution,
+- network-partition recovery,
+- broad self-healing,
+- or general fault-tolerant replanning.
+
+The current auction assumes a shared deterministic utility policy and authoritative application-owned capability profiles. Those limits are intentional so Agent 11 teaches decentralized allocation without quietly becoming the later fault-tolerance and trust agents.
 
 ## Run Locally
 
@@ -129,7 +202,7 @@ GitHub is the source of truth. Pushes to `main` run the complete test suite firs
 Runtime LLM configuration belongs in the Hugging Face Space, not in source control:
 
 - `HF_TOKEN` — Hugging Face Space secret used only for optional live inference.
-- `MODEL_ID` — Space variable or secret identifying the inference model.
+- `MODEL_ID` — Space variable identifying the inference model.
 - `HF_BASE_URL` — optional non-secret override; defaults to the Hugging Face router endpoint.
 
 Do not place secret values in `.env.example`, source files, commits, screenshots, logs, or README content.
