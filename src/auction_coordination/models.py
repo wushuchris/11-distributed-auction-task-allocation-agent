@@ -302,3 +302,44 @@ class TaskFailure(StrictModel):
     @classmethod
     def failed_at_must_be_timezone_aware(cls, value: datetime) -> datetime:
         return _timezone_aware(value)
+
+
+class WorkProduct(StrictModel):
+    """Validated task output produced by the awarded peer.
+
+    Execution lineage is application-owned. Handlers provide substantive
+    content only; they do not choose their own task, award, worker identity, or
+    capability.
+    """
+
+    work_product_id: Identifier
+    award_id: Identifier
+    auction_id: Identifier
+    task_id: Identifier
+    auction_round: AuctionRound
+    agent_id: Identifier
+    capability: Capability
+    title: ShortText
+    summary: LongText
+    findings: tuple[ShortText, ...] = Field(min_length=1)
+    evidence_ids: tuple[Identifier, ...] = Field(min_length=1)
+    completed_at: datetime
+
+    @field_validator("findings")
+    @classmethod
+    def findings_must_be_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(value) != len(set(value)):
+            raise ValueError("findings must not contain duplicates")
+        return value
+
+    @field_validator("evidence_ids")
+    @classmethod
+    def evidence_ids_must_be_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(value) != len(set(value)):
+            raise ValueError("evidence_ids must not contain duplicates")
+        return value
+
+    @field_validator("completed_at")
+    @classmethod
+    def completed_at_must_be_timezone_aware(cls, value: datetime) -> datetime:
+        return _timezone_aware(value)
