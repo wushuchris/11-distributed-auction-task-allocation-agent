@@ -12,6 +12,7 @@ from .models import (
     TaskAnnouncement,
     TaskAward,
     TaskFailure,
+    WorkProduct,
 )
 
 __version__ = "0.1.0"
@@ -28,5 +29,6 @@ __all__ = [
     "TaskAnnouncement",
     "TaskAward",
     "TaskFailure",
+    "WorkProduct",
     "__version__",
 ]
