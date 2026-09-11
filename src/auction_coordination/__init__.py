@@ -62,12 +62,26 @@ from .hf_runtime import (
     HuggingFaceStructuredChatClient,
     ModelInvocationError,
 )
+from .demo import (
+    ArchitectureRow,
+    AuctionRow,
+    DemoMode,
+    DemoSnapshot,
+    EventRow,
+    StressRow,
+    WorkProductRow,
+    llm_runtime_status,
+    run_demo,
+    safe_run_demo,
+)
 
 __version__ = "0.1.0"
 
 __all__ = [
     "AbstentionReason",
     "AllocationComparison",
+    "ArchitectureRow",
+    "AuctionRow",
     "AuctionState",
     "AuctionStatus",
     "Bid",
@@ -81,8 +95,11 @@ __all__ = [
     "CentralTaskMetrics",
     "CentralTaskResult",
     "CentralizedAllocationBaseline",
+    "DemoMode",
+    "DemoSnapshot",
     "DeterministicMissionRuntime",
     "EvidenceRecord",
+    "EventRow",
     "FailureClass",
     "HF_DEFAULT_BASE_URL",
     "HuggingFaceChatClient",
@@ -99,6 +116,7 @@ __all__ = [
     "RegisteredCapability",
     "ScenarioEvaluation",
     "StressEvaluationReport",
+    "StressRow",
     "StressScenario",
     "StressSuiteMetrics",
     "StructuredModelError",
@@ -111,10 +129,14 @@ __all__ = [
     "TaskRunStatus",
     "TaskStressOverride",
     "WorkProduct",
+    "WorkProductRow",
     "build_llm_handlers",
     "compare_allocation_models",
     "default_stress_scenarios",
+    "llm_runtime_status",
     "make_llm_task_handler",
+    "run_demo",
     "run_stress_evaluation",
+    "safe_run_demo",
     "__version__",
 ]
