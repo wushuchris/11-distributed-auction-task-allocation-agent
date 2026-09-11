@@ -36,6 +36,17 @@ from .baseline import (
     CentralizedAllocationBaseline,
     compare_allocation_models,
 )
+from .evaluation import (
+    CapabilityStressOverride,
+    PeerStressOverride,
+    ScenarioEvaluation,
+    StressEvaluationReport,
+    StressScenario,
+    StressSuiteMetrics,
+    TaskStressOverride,
+    default_stress_scenarios,
+    run_stress_evaluation,
+)
 
 __version__ = "0.1.0"
 
@@ -47,6 +58,7 @@ __all__ = [
     "Bid",
     "BidAbstention",
     "CapabilityProfile",
+    "CapabilityStressOverride",
     "CentralEvent",
     "CentralEventType",
     "CentralMissionMetrics",
@@ -60,7 +72,12 @@ __all__ = [
     "MissionEventType",
     "MissionMetrics",
     "MissionResult",
+    "PeerStressOverride",
     "RegisteredCapability",
+    "ScenarioEvaluation",
+    "StressEvaluationReport",
+    "StressScenario",
+    "StressSuiteMetrics",
     "TaskAnnouncement",
     "TaskAward",
     "TaskBlueprint",
@@ -68,7 +85,10 @@ __all__ = [
     "TaskMetrics",
     "TaskRunResult",
     "TaskRunStatus",
+    "TaskStressOverride",
     "WorkProduct",
     "compare_allocation_models",
+    "default_stress_scenarios",
+    "run_stress_evaluation",
     "__version__",
 ]
