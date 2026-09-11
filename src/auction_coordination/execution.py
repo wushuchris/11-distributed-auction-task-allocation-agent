@@ -66,7 +66,7 @@ class DeterministicTaskExecutor:
         handlers: Mapping[str, TaskHandler] | None = None,
     ) -> None:
         self._registry = registry
-        self._handlers = dict(handlers or default_handlers())
+        self._handlers = dict(default_handlers() if handlers is None else handlers)
 
     def execute(
         self,
