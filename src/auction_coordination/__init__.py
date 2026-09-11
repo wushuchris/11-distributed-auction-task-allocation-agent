@@ -47,6 +47,21 @@ from .evaluation import (
     default_stress_scenarios,
     run_stress_evaluation,
 )
+from .llm import (
+    HF_DEFAULT_BASE_URL,
+    EvidenceRecord,
+    HuggingFaceChatClient,
+    JsonChatModel,
+    ModelConfigurationError,
+    ModelWorkDraft,
+    StructuredModelError,
+    build_llm_handlers,
+    make_llm_task_handler,
+)
+from .hf_runtime import (
+    HuggingFaceStructuredChatClient,
+    ModelInvocationError,
+)
 
 __version__ = "0.1.0"
 
@@ -67,17 +82,26 @@ __all__ = [
     "CentralTaskResult",
     "CentralizedAllocationBaseline",
     "DeterministicMissionRuntime",
+    "EvidenceRecord",
     "FailureClass",
+    "HF_DEFAULT_BASE_URL",
+    "HuggingFaceChatClient",
+    "HuggingFaceStructuredChatClient",
+    "JsonChatModel",
     "MissionEvent",
     "MissionEventType",
     "MissionMetrics",
     "MissionResult",
+    "ModelConfigurationError",
+    "ModelInvocationError",
+    "ModelWorkDraft",
     "PeerStressOverride",
     "RegisteredCapability",
     "ScenarioEvaluation",
     "StressEvaluationReport",
     "StressScenario",
     "StressSuiteMetrics",
+    "StructuredModelError",
     "TaskAnnouncement",
     "TaskAward",
     "TaskBlueprint",
@@ -87,8 +111,10 @@ __all__ = [
     "TaskRunStatus",
     "TaskStressOverride",
     "WorkProduct",
+    "build_llm_handlers",
     "compare_allocation_models",
     "default_stress_scenarios",
+    "make_llm_task_handler",
     "run_stress_evaluation",
     "__version__",
 ]
