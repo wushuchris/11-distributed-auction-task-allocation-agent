@@ -10,6 +10,7 @@ from auction_coordination.demo import (
     run_demo,
     safe_run_demo,
 )
+from auction_coordination.story import build_auction_story, build_peer_story_cards
 
 
 def test_deterministic_demo_preserves_mission_and_business_metrics() -> None:
@@ -28,6 +29,57 @@ def test_deterministic_demo_preserves_mission_and_business_metrics() -> None:
         "Quill Synthesis",
     ]
     assert "no semantic manager chose the workers" in snapshot.executive_summary
+
+
+def test_business_story_introduces_all_six_authoritative_peers() -> None:
+    cards = build_peer_story_cards()
+
+    assert len(cards) == 6
+    assert [card.name for card in cards] == [
+        "Atlas Research",
+        "Ledger Analyst",
+        "Sentinel Risk",
+        "Veritas Evidence",
+        "Mosaic Generalist",
+        "Quill Synthesis",
+    ]
+    assert cards[0].role == "Market Research Specialist"
+    assert "Market Research 94%" in cards[0].strengths
+    assert cards[4].role == "Cross-Functional Generalist"
+    assert "higher synthetic cost" in cards[4].business_value
+
+
+def test_auction_story_replays_real_bid_policy_and_settlement() -> None:
+    snapshot = run_demo()
+    stories, bid_rows = build_auction_story(snapshot.mission)
+
+    assert len(stories) == 5
+    assert len(bid_rows) == 30
+    assert sum(row.decision == "BID" for row in bid_rows) == 18
+    assert sum(row.decision == "ABSTAIN" for row in bid_rows) == 12
+    assert [story.winner for story in stories] == [
+        "Atlas Research",
+        "Ledger Analyst",
+        "Sentinel Risk",
+        "Veritas Evidence",
+        "Quill Synthesis",
+    ]
+
+    market = stories[0]
+    assert market.task == "Market Attractiveness Research"
+    assert market.winning_score == "0.8385"
+    assert market.runner_up == "Veritas Evidence"
+    assert market.margin == "0.0810"
+    assert "94% registered capability" in market.why_winner
+
+    market_rows = [row for row in bid_rows if row.task == market.task]
+    atlas = next(row for row in market_rows if row.peer == "Atlas Research")
+    veritas = next(row for row in market_rows if row.peer == "Veritas Evidence")
+    ledger = next(row for row in market_rows if row.peer == "Ledger Analyst")
+    assert atlas.outcome == "Winner"
+    assert atlas.auction_score == "0.8385"
+    assert veritas.outcome == "Bid · rank 2"
+    assert ledger.decision == "ABSTAIN"
 
 
 def test_demo_architecture_view_is_controlled_comparison() -> None:
@@ -93,7 +145,9 @@ def test_app_imports_and_builds_gradio_blocks() -> None:
 
     assert app.demo is not None
     assert app.DEFAULT_SNAPSHOT.mission.metrics.mission_success is True
-    assert len(app.DEFAULT_OUTPUTS) == 9
+    assert len(app.DEFAULT_OUTPUTS) == 11
+    assert "What happened in the marketplace" in app.DEFAULT_OUTPUTS[2]
+    assert len(app.DEFAULT_OUTPUTS[4]) == 30
 
 
 def test_ui_deterministic_run_returns_business_first_outputs() -> None:
@@ -101,12 +155,14 @@ def test_ui_deterministic_run_returns_business_first_outputs() -> None:
 
     outputs = app._run_from_ui("Deterministic")
 
-    assert len(outputs) == 9
-    assert "Mission completed" in outputs[0]
+    assert len(outputs) == 11
+    assert "Due-diligence mission completed" in outputs[0]
     assert "Executive due-diligence result" in outputs[1]
-    assert len(outputs[2]) == 5
-    assert len(outputs[3]) == 2
-    assert len(outputs[5]) == 9
-    assert len(outputs[6]) == 5
-    assert len(outputs[7]) == 50
-    assert outputs[8]["mission_success"] is True
+    assert "Market Attractiveness Research" in outputs[2]
+    assert len(outputs[3]) == 5
+    assert len(outputs[4]) == 30
+    assert len(outputs[5]) == 5
+    assert len(outputs[6]) == 2
+    assert len(outputs[8]) == 9
+    assert len(outputs[9]) == 50
+    assert outputs[10]["mission_success"] is True
