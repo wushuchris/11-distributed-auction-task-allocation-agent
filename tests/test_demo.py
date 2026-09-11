@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib
+
 from auction_coordination.demo import (
     DemoMode,
     llm_runtime_status,
@@ -84,3 +86,27 @@ def test_safe_llm_demo_reports_missing_configuration_without_starting() -> None:
     assert snapshot is None
     assert error is not None
     assert "HF_TOKEN" in error or "MODEL_ID" in error
+
+
+def test_app_imports_and_builds_gradio_blocks() -> None:
+    app = importlib.import_module("app")
+
+    assert app.demo is not None
+    assert app.DEFAULT_SNAPSHOT.mission.metrics.mission_success is True
+    assert len(app.DEFAULT_OUTPUTS) == 9
+
+
+def test_ui_deterministic_run_returns_business_first_outputs() -> None:
+    app = importlib.import_module("app")
+
+    outputs = app._run_from_ui("Deterministic")
+
+    assert len(outputs) == 9
+    assert "Mission completed" in outputs[0]
+    assert "Executive due-diligence result" in outputs[1]
+    assert len(outputs[2]) == 5
+    assert len(outputs[3]) == 2
+    assert len(outputs[5]) == 9
+    assert len(outputs[6]) == 5
+    assert len(outputs[7]) == 50
+    assert outputs[8]["mission_success"] is True
