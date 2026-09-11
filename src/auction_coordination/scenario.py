@@ -1,10 +1,74 @@
-"""Synthetic due-diligence peer configuration for the Agent 11 demo."""
+"""Synthetic due-diligence peer and task configuration for the Agent 11 demo."""
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 from .bidding import PeerBidSettings
 from .models import CapabilityProfile, RegisteredCapability
 from .registry import PeerRegistry
+
+
+@dataclass(frozen=True)
+class TaskBlueprint:
+    """Deterministic task definition used by the synthetic mission runtime."""
+
+    task_id: str
+    auction_id: str
+    capability: str
+    summary: str
+    dependency_task_ids: tuple[str, ...] = ()
+    minimum_capability_score: float = 0.70
+    maximum_cost: float = 100.0
+    max_auction_rounds: int = 2
+
+
+def default_task_blueprints() -> tuple[TaskBlueprint, ...]:
+    """Return the five-task synthetic due-diligence dependency graph.
+
+    The runtime advances this fixed task graph but never assigns a worker.
+    Allocation remains owned by peer bidding plus deterministic settlement.
+    """
+
+    return (
+        TaskBlueprint(
+            task_id="task.market",
+            auction_id="auction.market",
+            capability="market_research",
+            summary="Assess the fictional target market and competitive environment.",
+        ),
+        TaskBlueprint(
+            task_id="task.finance",
+            auction_id="auction.finance",
+            capability="financial_analysis",
+            summary="Assess synthetic financial quality, cash conversion, and margin durability.",
+        ),
+        TaskBlueprint(
+            task_id="task.risk",
+            auction_id="auction.risk",
+            capability="operating_risk",
+            summary="Assess synthetic operating, supplier, integration, and key-person risks.",
+        ),
+        TaskBlueprint(
+            task_id="task.verify",
+            auction_id="auction.verify",
+            capability="evidence_verification",
+            summary="Verify the synthetic market, financial, and operating-risk evidence.",
+            dependency_task_ids=("task.market", "task.finance", "task.risk"),
+        ),
+        TaskBlueprint(
+            task_id="task.synthesis",
+            auction_id="auction.synthesis",
+            capability="executive_synthesis",
+            summary="Synthesize validated diligence into a bounded next-stage recommendation.",
+            dependency_task_ids=(
+                "task.market",
+                "task.finance",
+                "task.risk",
+                "task.verify",
+            ),
+        ),
+    )
 
 
 def default_peer_profiles() -> tuple[CapabilityProfile, ...]:
