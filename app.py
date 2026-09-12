@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import sys
+import time
 from pathlib import Path
 
 import gradio as gr
@@ -47,6 +48,19 @@ TASK_VISUALS = {
     "Evidence Verification": "✅",
     "Executive Due-Diligence Synthesis": "📝",
 }
+EVENT_VISUALS = {
+    "Task Announcement": "📣",
+    "Bid": "💬",
+    "Bid Abstention": "↩️",
+    "Auction Closed": "🔒",
+    "Task Award": "🏆",
+    "Task Accepted": "🤝",
+    "Task Result": "✅",
+    "Task Failure": "❌",
+    "Reauction Announcement": "🔁",
+    "Escalation": "⚠️",
+}
+PLAYBACK_DELAY_SECONDS = 0.10
 
 APP_CSS = """
 .gradio-container { max-width: 980px !important; }
@@ -121,6 +135,25 @@ APP_CSS = """
 .start-stack { display:flex; gap:7px; flex-wrap:wrap; margin-top:9px; }
 .flow-card { border:1px solid rgba(148,163,184,.24); border-radius:999px; padding:6px 10px; font-size:.86rem; background:rgba(148,163,184,.03); }
 
+/* Live protocol playback makes execution visible instead of showing only a spinner. */
+.activity-shell { border:1px solid rgba(37,99,235,.26); border-radius:18px; padding:16px 18px; margin:14px 0 12px; background:linear-gradient(135deg,rgba(37,99,235,.09),rgba(16,185,129,.035)); }
+.activity-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:10px; }
+.activity-title { font-size:1.04rem; font-weight:800; }
+.activity-subtitle { font-size:.91rem; line-height:1.4; opacity:.78; margin-top:3px; }
+.activity-count { flex:0 0 auto; font-size:.82rem; font-weight:750; border:1px solid rgba(148,163,184,.28); border-radius:999px; padding:5px 9px; }
+.activity-progress { height:7px; border-radius:999px; overflow:hidden; background:rgba(148,163,184,.16); margin-bottom:12px; }
+.activity-progress > span { display:block; height:100%; background:linear-gradient(90deg,#2563eb,#10b981); transition:width .18s ease; }
+.activity-feed { display:grid; gap:7px; }
+.activity-event { display:grid; grid-template-columns:32px minmax(0,1fr); gap:9px; align-items:start; border-top:1px solid rgba(148,163,184,.16); padding-top:8px; }
+.activity-event:first-child { border-top:0; padding-top:0; }
+.activity-event.latest { border-radius:10px; padding:8px 9px; margin:0 -9px; background:rgba(37,99,235,.075); border-top-color:transparent; }
+.activity-icon { font-size:1.05rem; line-height:1.45; }
+.activity-main { font-size:.94rem; line-height:1.35; }
+.activity-main strong { font-weight:800; }
+.activity-meta { font-size:.78rem; opacity:.67; margin-top:2px; }
+.activity-detail { font-size:.82rem; opacity:.77; margin-top:3px; line-height:1.35; }
+.activity-complete { border-color:rgba(16,185,129,.32); background:linear-gradient(135deg,rgba(16,185,129,.10),rgba(37,99,235,.04)); }
+
 /* Auction outcomes also become a single reading column. */
 .auction-grid { display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
 .auction-card { border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:16px 18px; background:rgba(148,163,184,.035); }
@@ -143,6 +176,8 @@ APP_CSS = """
     .peer-card { grid-template-columns:50px 1fr; }
     .peer-details { grid-column:1 / -1; padding-left:63px; }
     .auction-top { grid-template-columns:1fr; }
+    .activity-head { display:block; }
+    .activity-count { display:inline-block; margin-top:8px; }
 }
 """
 
@@ -262,6 +297,99 @@ def _raw_snapshot(snapshot: DemoSnapshot) -> dict[str, object]:
     }
 
 
+def _idle_activity_html() -> str:
+    return (
+        "<div class='activity-shell'>"
+        "<div class='activity-head'><div><div class='activity-title'>▶ Live Marketplace Activity</div>"
+        "<div class='activity-subtitle'>Click <b>Run the diligence marketplace</b> to watch task announcements, peer bids, abstentions, awards, and results appear here.</div></div>"
+        "<div class='activity-count'>Ready</div></div>"
+        "<div class='activity-progress'><span style='width:0%'></span></div>"
+        "</div>"
+    )
+
+
+def _starting_activity_html(mode: DemoMode) -> str:
+    mode_name = "LLM-assisted" if mode is DemoMode.LLM_ASSISTED else "Deterministic"
+    return (
+        "<div class='activity-shell'>"
+        "<div class='activity-head'><div><div class='activity-title'>⚙️ Starting marketplace</div>"
+        f"<div class='activity-subtitle'>{html.escape(mode_name)} work-product execution selected. The allocation protocol is preparing the first task auction.</div></div>"
+        "<div class='activity-count'>Starting</div></div>"
+        "<div class='activity-progress'><span style='width:2%'></span></div>"
+        "</div>"
+    )
+
+
+def _event_action(event_name: str) -> str:
+    return {
+        "Task Announcement": "opened an auction",
+        "Bid": "submitted a BID",
+        "Bid Abstention": "ABSTAINED",
+        "Auction Closed": "closed the auction",
+        "Task Award": "issued the award",
+        "Task Accepted": "accepted the assignment",
+        "Task Result": "completed the work",
+        "Task Failure": "reported a failure",
+        "Reauction Announcement": "reopened the auction",
+        "Escalation": "escalated the task",
+    }.get(event_name, event_name.lower())
+
+
+def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool = False) -> str:
+    total = max(len(snapshot.event_rows), 1)
+    event_count = max(0, min(event_count, len(snapshot.event_rows)))
+    progress = 100 if complete else max(2, round((event_count / total) * 100))
+    visible_events = snapshot.event_rows[max(0, event_count - 8):event_count]
+    completed_tasks = sum(1 for row in snapshot.event_rows[:event_count] if row.event == "Task Result")
+
+    if event_count:
+        current = snapshot.event_rows[event_count - 1]
+        current_task = current.task
+        current_phase = current.event
+    else:
+        current_task = "Preparing first auction"
+        current_phase = "Starting"
+
+    if complete:
+        title = "✅ Marketplace run complete"
+        subtitle = f"{snapshot.mission.metrics.tasks_completed}/5 work packages completed. Final results are now published below."
+        counter = f"{len(snapshot.event_rows)} messages"
+        shell_class = "activity-shell activity-complete"
+    else:
+        title = f"⚡ Live Marketplace Activity · {current_task}"
+        subtitle = f"Phase: {current_phase} · Completed work packages: {completed_tasks}/5"
+        counter = f"{event_count}/{len(snapshot.event_rows)} messages"
+        shell_class = "activity-shell"
+
+    rendered = []
+    for index, row in enumerate(visible_events):
+        icon = EVENT_VISUALS.get(row.event, "•")
+        actor = row.actor if row.actor != "—" else "Protocol"
+        latest = " latest" if index == len(visible_events) - 1 and not complete else ""
+        rendered.append(
+            f"<div class='activity-event{latest}'>"
+            f"<div class='activity-icon'>{icon}</div>"
+            "<div>"
+            f"<div class='activity-main'><strong>{html.escape(actor)}</strong> {_event_action(row.event)} · {html.escape(row.task)}</div>"
+            f"<div class='activity-meta'>Round {row.round} · Message {row.sequence} · {html.escape(row.event)}</div>"
+            f"<div class='activity-detail'>{html.escape(row.detail)}</div>"
+            "</div></div>"
+        )
+
+    feed = "".join(rendered) or "<div class='activity-subtitle'>Waiting for the first protocol message…</div>"
+    return (
+        f"<div class='{shell_class}'>"
+        "<div class='activity-head'><div>"
+        f"<div class='activity-title'>{title}</div>"
+        f"<div class='activity-subtitle'>{html.escape(subtitle)}</div>"
+        "</div>"
+        f"<div class='activity-count'>{html.escape(counter)}</div></div>"
+        f"<div class='activity-progress'><span style='width:{progress}%'></span></div>"
+        f"<div class='activity-feed'>{feed}</div>"
+        "</div>"
+    )
+
+
 def _outputs_for_snapshot(snapshot: DemoSnapshot):
     return (
         _kpi_html(snapshot),
@@ -292,6 +420,44 @@ def _run_from_ui(mode_label: str):
             {"error": error, "mode": mode.value},
         )
     return _outputs_for_snapshot(snapshot)
+
+
+def _running_outputs(mode: DemoMode):
+    return (
+        "<div class='control-note'><strong>Marketplace running.</strong> Final metrics will publish after the protocol playback completes.</div>",
+        "### Mission running…\nWatch **Live Marketplace Activity** above for the current task and protocol phase.",
+        "### Executive result pending\nThe final diligence synthesis will publish only after the work chain completes.",
+        "<div class='control-note'>Auction outcomes will publish after the live protocol playback.</div>",
+        [], [], [], [], "", [], [],
+        {"status": "running", "mode": mode.value},
+    )
+
+
+def _stream_run_from_ui(mode_label: str, playback_delay: float = PLAYBACK_DELAY_SECONDS):
+    """Yield visible protocol playback frames before publishing final mission outputs."""
+
+    mode = DemoMode.LLM_ASSISTED if mode_label == "LLM-assisted" else DemoMode.DETERMINISTIC
+    running = _running_outputs(mode)
+    yield (_starting_activity_html(mode), *running)
+
+    snapshot, error = safe_run_demo(mode)
+    if snapshot is None:
+        failed = _run_from_ui(mode_label)
+        error_activity = (
+            "<div class='activity-shell'><div class='activity-head'><div>"
+            "<div class='activity-title'>⚠️ Marketplace could not start</div>"
+            f"<div class='activity-subtitle'>{html.escape(error or 'Runtime configuration is unavailable.')}</div>"
+            "</div><div class='activity-count'>Stopped safely</div></div></div>"
+        )
+        yield (error_activity, *failed)
+        return
+
+    for event_count in range(1, len(snapshot.event_rows) + 1):
+        yield (_activity_html(snapshot, event_count), *running)
+        if playback_delay > 0:
+            time.sleep(playback_delay)
+
+    yield (_activity_html(snapshot, len(snapshot.event_rows), complete=True), *_outputs_for_snapshot(snapshot))
 
 
 DEFAULT_SNAPSHOT = run_demo(DemoMode.DETERMINISTIC)
@@ -354,6 +520,7 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
     gr.Markdown("**Live LLM runtime:** " + llm_runtime_status() + "  \n**Core rule:** *Peers decide whether to compete. The protocol decides who wins.*")
     run_button = gr.Button("Run the diligence marketplace", variant="primary")
 
+    live_activity = gr.HTML(_idle_activity_html())
     mission_status = gr.Markdown(DEFAULT_OUTPUTS[1], elem_classes=["result-card"])
     with gr.Accordion("Open executive diligence result", open=False):
         executive_summary = gr.Markdown(DEFAULT_OUTPUTS[2])
@@ -394,9 +561,9 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
             raw_snapshot = gr.JSON(value=DEFAULT_OUTPUTS[11], label="Compact mission snapshot")
 
     run_button.click(
-        fn=_run_from_ui,
+        fn=_stream_run_from_ui,
         inputs=[mode],
-        outputs=[kpi_html, mission_status, executive_summary, auction_story, auction_table, bid_table, work_table, architecture_table, stress_summary, stress_table, event_table, raw_snapshot],
+        outputs=[live_activity, kpi_html, mission_status, executive_summary, auction_story, auction_table, bid_table, work_table, architecture_table, stress_summary, stress_table, event_table, raw_snapshot],
     )
 
 if __name__ == "__main__":
