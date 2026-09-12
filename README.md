@@ -17,7 +17,7 @@ Distributed multi-agent task allocation using typed auctions, deterministic bidd
 
 ## Status
 
-**Engineering production-validated; final demo presentation review in progress.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, test-gated deployment path, and live Hugging Face runtime have all been validated. The current automated suite passes **150 tests**, and both deterministic and live LLM-assisted production checks completed successfully. The remaining closeout item is final approval of the redesigned business-first demo experience.
+**Complete and production-validated.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, test-gated deployment path, live Hugging Face runtime, and redesigned business-first demo have all been validated. The final automated suite passes **150 tests**. Deterministic and live LLM-assisted production checks completed successfully, and the final demo presentation passed human review for business clarity, scanability, visible auction activity, and post-run auditability.
 
 ## Problem
 
@@ -133,11 +133,12 @@ The live production path uses Hugging Face Inference Providers through the OpenA
 
 **Live Space:** https://huggingface.co/spaces/FlyingNunchucks/11-distributed-auction-task-allocation-agent
 
-The redesigned demo separates the visitor experience into a business layer first and an engineering layer underneath:
+The final demo separates the visitor experience into a business layer first and an engineering layer underneath:
 
 - **Business case** — explains the fictional acquisition decision and why task allocation matters,
 - **Meet the AI team** — introduces all six peers, specialties, registered strengths, and availability,
 - **Marketplace walkthrough** — explains task announcement, BID/ABSTAIN, deterministic scoring, award, and bounded reauction,
+- **Live Marketplace Activity** — replays the real append-only protocol events with visible running state, paced BID/ABSTAIN/award/result activity, and a full scrollable 50-message transcript after completion,
 - **Business Walkthrough** — explains each of the five auctions in plain language and why the winner won,
 - **Auction Room** — shows every peer decision plus capability, confidence, availability, synthetic cost, score, and rank,
 - **Work Products** — shows validated outputs produced by the awarded peers,
@@ -145,11 +146,11 @@ The redesigned demo separates the visitor experience into a business layer first
 - **Stress & Recovery** — exposes the nine-scenario deterministic evaluation,
 - **Engineering Audit** — preserves the append-only protocol events and compact runtime snapshot.
 
-Deterministic mode is the safe default. LLM-assisted mode changes the substantive work products after award but does not control eligibility, bidding admission, scoring, settlement, winner selection, reauction, or publication.
+The page uses a deliberately narrow, vertical reading path so a non-technical visitor can understand the business problem and team before opening technical detail. Deterministic mode is the safe default. LLM-assisted mode changes the substantive work products after award but does not control eligibility, bidding admission, scoring, settlement, winner selection, reauction, or publication.
 
 ## Production Validation
 
-Current automated test result:
+Final automated test result:
 
 ```text
 150 passed
@@ -170,7 +171,9 @@ The deterministic production check completed with:
 
 The live LLM-assisted production check also completed successfully while preserving the same application-controlled allocation boundary. The model changed the awarded work-product content, not the auction authority.
 
-The redesigned storytelling layer is regression-tested against the authoritative peer registry, local BID/ABSTAIN policy, and deterministic settlement function so the business explanation cannot silently diverge from the real engine.
+The final presentation review also validated that a visitor can scan the business case, distinguish the six peers, watch the real protocol activity unfold, see that the system is still running during compute pauses, and scroll through the complete activity transcript afterward.
+
+The storytelling layer is regression-tested against the authoritative peer registry, local BID/ABSTAIN policy, deterministic settlement function, progressive playback behavior, and completed audit transcript so the business explanation cannot silently diverge from the real engine.
 
 ## Reusable Primitive
 
