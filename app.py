@@ -127,17 +127,20 @@ APP_CSS = """
 /* Live protocol playback */
 .activity-shell { border:1px solid rgba(37,99,235,.26); border-radius:18px; padding:16px 18px; margin:14px 0 12px; background:linear-gradient(135deg,rgba(37,99,235,.09),rgba(16,185,129,.035)); }
 .activity-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:10px; }
-.activity-title-row { display:flex; align-items:center; gap:9px; }
+.activity-title-row { display:flex; align-items:center; gap:10px; }
 .activity-title { font-size:1.04rem; font-weight:800; }
 .activity-subtitle { font-size:.91rem; line-height:1.4; opacity:.78; margin-top:3px; }
 .activity-count { flex:0 0 auto; font-size:.82rem; font-weight:750; border:1px solid rgba(148,163,184,.28); border-radius:999px; padding:5px 9px; }
-.activity-spinner { width:18px; height:18px; box-sizing:border-box; border:3px solid rgba(37,99,235,.18); border-top-color:#2563eb; border-radius:50%; animation:activity-spin .8s linear infinite; flex:0 0 auto; }
+.activity-spinner { width:24px; height:24px; box-sizing:border-box; border:4px solid rgba(37,99,235,.18); border-top-color:#2563eb; border-right-color:#10b981; border-radius:50%; animation:activity-spin .72s linear infinite; flex:0 0 auto; box-shadow:0 0 0 3px rgba(37,99,235,.06); }
+.activity-running-label { font-size:.72rem; font-weight:850; letter-spacing:.09em; color:#2563eb; border:1px solid rgba(37,99,235,.28); border-radius:999px; padding:4px 7px; background:rgba(37,99,235,.07); }
 @keyframes activity-spin { to { transform:rotate(360deg); } }
 .activity-progress { height:7px; border-radius:999px; overflow:hidden; background:rgba(148,163,184,.16); margin-bottom:12px; }
 .activity-progress > span { display:block; height:100%; background:linear-gradient(90deg,#2563eb,#10b981); transition:width .24s ease; }
 .activity-progress.indeterminate > span { width:34%; animation:activity-slide 1.05s ease-in-out infinite; }
 @keyframes activity-slide { 0% { transform:translateX(-110%); } 50% { transform:translateX(190%); } 100% { transform:translateX(-110%); } }
 .activity-feed { display:grid; gap:7px; }
+.activity-feed.activity-scroll { max-height:430px; overflow-y:auto; padding-right:8px; scrollbar-gutter:stable; }
+.activity-scroll-note { font-size:.82rem; opacity:.72; margin:2px 0 10px; }
 .activity-event { display:grid; grid-template-columns:32px minmax(0,1fr); gap:9px; align-items:start; border-top:1px solid rgba(148,163,184,.16); padding-top:8px; }
 .activity-event:first-child { border-top:0; padding-top:0; }
 .activity-event.latest { border-radius:10px; padding:8px 9px; margin:0 -9px; background:rgba(37,99,235,.075); border-top-color:transparent; }
@@ -171,6 +174,7 @@ APP_CSS = """
     .auction-top { grid-template-columns:1fr; }
     .activity-head { display:block; }
     .activity-count { display:inline-block; margin-top:8px; }
+    .activity-feed.activity-scroll { max-height:360px; }
 }
 """
 
@@ -294,11 +298,11 @@ def _starting_activity_html(mode: DemoMode) -> str:
     mode_name = "LLM-assisted" if mode is DemoMode.LLM_ASSISTED else "Deterministic"
     return (
         "<div class='activity-shell'><div class='activity-head'><div>"
-        "<div class='activity-title-row'><span class='activity-spinner'></span><div class='activity-title'>Starting marketplace · working…</div></div>"
+        "<div class='activity-title-row'><span class='activity-spinner'></span><span class='activity-running-label'>RUNNING</span><div class='activity-title'>Starting marketplace</div></div>"
         f"<div class='activity-subtitle'>{html.escape(mode_name)} work-product execution selected. The system is computing the mission before replaying its audited protocol events.</div>"
         "</div><div class='activity-count'>Working</div></div>"
         "<div class='activity-progress indeterminate'><span></span></div>"
-        "<div class='activity-subtitle'>The moving gear and bar mean the run is still active even if no new protocol message is available yet.</div>"
+        "<div class='activity-subtitle'>The spinner and moving bar mean the run is still active even if no new protocol message is available yet.</div>"
         "</div>"
     )
 
@@ -328,7 +332,10 @@ def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool =
     total = max(len(snapshot.event_rows), 1)
     event_count = max(0, min(event_count, len(snapshot.event_rows)))
     progress = 100 if complete else max(2, round((event_count / total) * 100))
-    visible_events = snapshot.event_rows[max(0, event_count - 8):event_count]
+    if complete:
+        visible_events = snapshot.event_rows[:event_count]
+    else:
+        visible_events = snapshot.event_rows[max(0, event_count - 8):event_count]
     completed_tasks = sum(1 for row in snapshot.event_rows[:event_count] if row.event == "Task Result")
 
     if event_count:
@@ -343,12 +350,16 @@ def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool =
         counter = f"{len(snapshot.event_rows)} messages"
         shell_class = "activity-shell activity-complete"
         title_html = f"<div class='activity-title'>{html.escape(title)}</div>"
+        feed_class = "activity-feed activity-scroll"
+        scroll_note = f"<div class='activity-scroll-note'>Scroll inside this transcript to review all {event_count} protocol messages.</div>"
     else:
         title = f"Live Marketplace Activity · {current_task}"
         subtitle = f"Phase: {current_phase} · Completed work packages: {completed_tasks}/5"
         counter = f"{event_count}/{len(snapshot.event_rows)} messages"
         shell_class = "activity-shell"
-        title_html = f"<div class='activity-title-row'><span class='activity-spinner'></span><div class='activity-title'>⚡ {html.escape(title)}</div></div>"
+        title_html = f"<div class='activity-title-row'><span class='activity-spinner'></span><span class='activity-running-label'>RUNNING</span><div class='activity-title'>⚡ {html.escape(title)}</div></div>"
+        feed_class = "activity-feed"
+        scroll_note = ""
 
     rendered = []
     for index, row in enumerate(visible_events):
@@ -368,7 +379,7 @@ def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool =
         f"<div class='activity-subtitle'>{html.escape(subtitle)}</div></div>"
         f"<div class='activity-count'>{html.escape(counter)}</div></div>"
         f"<div class='activity-progress'><span style='width:{progress}%'></span></div>"
-        f"<div class='activity-feed'>{feed}</div></div>"
+        f"{scroll_note}<div class='{feed_class}'>{feed}</div></div>"
     )
 
 
