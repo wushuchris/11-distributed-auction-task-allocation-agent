@@ -49,51 +49,101 @@ TASK_VISUALS = {
 }
 
 APP_CSS = """
-.gradio-container { max-width: 1480px !important; }
-.hero-card { border:1px solid rgba(148,163,184,.28); border-radius:24px; padding:28px 30px; margin-bottom:16px; background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(16,185,129,.08)); }
-.hero-card h1 { margin:6px 0 8px; font-size:2.1rem; line-height:1.12; max-width:1050px; }
-.hero-card p { margin:0; font-size:1rem; max-width:980px; opacity:.9; }
+.gradio-container { max-width: 1120px !important; }
+.hero-card {
+    border:1px solid rgba(148,163,184,.28);
+    border-radius:24px;
+    padding:28px 30px;
+    margin-bottom:16px;
+    background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(16,185,129,.08));
+}
+.hero-card h1 { margin:6px 0 8px; font-size:2.05rem; line-height:1.14; max-width:900px; }
+.hero-card p { margin:0; font-size:1rem; max-width:860px; opacity:.9; }
 .eyebrow,.section-kicker { text-transform:uppercase; letter-spacing:.11em; font-size:.72rem; font-weight:750; opacity:.72; }
-.kpi-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; margin:14px 0 22px; }
-.kpi-card { border:1px solid rgba(148,163,184,.26); border-radius:15px; padding:14px 12px; background:rgba(148,163,184,.04); text-align:center; }
-.kpi-value { font-size:1.55rem; font-weight:800; line-height:1.05; }
-.kpi-label { margin-top:5px; font-size:.78rem; opacity:.72; }
-.story-strip { display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto 1fr; align-items:center; gap:10px; margin:12px 0 18px; }
-.story-node { border:1px solid rgba(148,163,184,.27); border-radius:16px; padding:15px; min-height:105px; background:rgba(148,163,184,.045); }
-.story-icon { font-size:1.55rem; margin-bottom:6px; }
-.story-node strong { display:block; margin-bottom:4px; }
-.story-arrow { font-size:1.25rem; opacity:.5; }
-.section-title { margin:26px 0 8px; }
+.section-title { margin:30px 0 10px; }
 .section-title h2 { margin:3px 0; }
-.peer-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:11px; margin:12px 0 18px; }
-.peer-card { border:1px solid rgba(148,163,184,.27); border-radius:18px; padding:15px; background:rgba(148,163,184,.04); }
-.peer-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-.peer-avatar { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:1.35rem; background:rgba(37,99,235,.10); border:1px solid rgba(37,99,235,.20); flex:0 0 auto; }
+
+/* Vertical mission snapshot: three rows instead of six side-by-side tiles. */
+.kpi-grid { display:grid; grid-template-columns:1fr; gap:8px; margin:14px 0 24px; }
+.kpi-card {
+    display:grid;
+    grid-template-columns:minmax(150px,.8fr) 1fr 1fr;
+    gap:14px;
+    align-items:center;
+    border:1px solid rgba(148,163,184,.25);
+    border-radius:15px;
+    padding:12px 15px;
+    background:rgba(148,163,184,.035);
+}
+.kpi-topic { font-size:.78rem; font-weight:760; letter-spacing:.05em; text-transform:uppercase; opacity:.68; }
+.kpi-pair { display:flex; align-items:baseline; gap:7px; }
+.kpi-value { font-size:1.22rem; font-weight:800; line-height:1; }
+.kpi-label { font-size:.78rem; opacity:.72; }
+
+/* One obvious top-to-bottom business path. */
+.story-strip { position:relative; display:grid; grid-template-columns:1fr; gap:9px; margin:12px 0 18px; padding-left:42px; }
+.story-strip::before { content:""; position:absolute; left:17px; top:22px; bottom:22px; width:2px; background:rgba(37,99,235,.20); }
+.story-node { position:relative; border:1px solid rgba(148,163,184,.25); border-radius:15px; padding:14px 16px; background:rgba(148,163,184,.035); }
+.story-node::before { content:""; position:absolute; left:-32px; top:23px; width:12px; height:12px; border-radius:50%; background:#2563eb; box-shadow:0 0 0 5px rgba(37,99,235,.10); }
+.story-head { display:flex; align-items:center; gap:9px; margin-bottom:3px; }
+.story-icon { font-size:1.25rem; }
+.story-node strong { font-size:.97rem; }
+.story-node span { display:block; font-size:.88rem; opacity:.78; line-height:1.35; }
+
+/* Vertical roster removes 3x2 eye jumps. */
+.peer-grid { display:grid; grid-template-columns:1fr; gap:8px; margin:12px 0 18px; }
+.peer-card {
+    display:grid;
+    grid-template-columns:48px minmax(190px,.8fr) 1.4fr;
+    gap:12px;
+    align-items:center;
+    border:1px solid rgba(148,163,184,.25);
+    border-radius:16px;
+    padding:12px 14px;
+    background:rgba(148,163,184,.035);
+}
+.peer-head { display:contents; }
+.peer-avatar { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:1.28rem; background:rgba(37,99,235,.10); border:1px solid rgba(37,99,235,.20); }
 .peer-name { font-weight:800; line-height:1.1; }
-.peer-role { font-size:.82rem; opacity:.76; margin-top:2px; }
-.peer-value { font-size:.88rem; line-height:1.35; margin:7px 0 9px; }
+.peer-role { font-size:.80rem; opacity:.72; margin-top:3px; }
+.peer-details { min-width:0; }
+.peer-value { font-size:.85rem; line-height:1.35; margin-bottom:7px; }
 .chip-row { display:flex; gap:5px; flex-wrap:wrap; }
-.chip { border:1px solid rgba(148,163,184,.30); border-radius:999px; padding:4px 7px; font-size:.72rem; opacity:.88; }
-.flow-wrap { display:grid; grid-template-columns:minmax(0,1.7fr) auto minmax(0,.8fr) auto minmax(0,.8fr); gap:12px; align-items:center; margin:12px 0 18px; }
-.start-stack { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.flow-card { border:1px solid rgba(148,163,184,.27); border-radius:15px; padding:13px; background:rgba(148,163,184,.04); min-height:88px; }
-.flow-card strong { display:block; margin-bottom:4px; }
-.flow-card small { opacity:.7; }
-.flow-arrow-big { font-size:1.4rem; opacity:.5; text-align:center; }
-.auction-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; margin-top:12px; }
-.auction-card { border:1px solid rgba(148,163,184,.27); border-radius:17px; padding:15px; background:rgba(148,163,184,.04); }
-.auction-card h3 { margin:0 0 7px; font-size:1rem; }
-.auction-question { font-size:.86rem; opacity:.78; margin-bottom:10px; }
-.auction-winner { font-weight:800; margin-bottom:7px; }
-.auction-stats { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:7px; }
-.auction-stat { border-radius:999px; border:1px solid rgba(148,163,184,.28); padding:4px 7px; font-size:.72rem; }
-.auction-card details { margin-top:8px; font-size:.82rem; }
+.chip { border:1px solid rgba(148,163,184,.30); border-radius:999px; padding:3px 7px; font-size:.70rem; opacity:.88; }
+
+/* Vertical dependency timeline instead of left-to-right arrows. */
+.flow-wrap { position:relative; display:grid; grid-template-columns:1fr; gap:8px; margin:12px 0 18px; padding-left:42px; }
+.flow-wrap::before { content:""; position:absolute; left:17px; top:25px; bottom:25px; width:2px; background:rgba(16,185,129,.23); }
+.flow-stage { position:relative; border:1px solid rgba(148,163,184,.25); border-radius:15px; padding:14px 16px; background:rgba(148,163,184,.035); }
+.flow-stage::before { content:""; position:absolute; left:-32px; top:23px; width:12px; height:12px; border-radius:50%; background:#10b981; box-shadow:0 0 0 5px rgba(16,185,129,.10); }
+.flow-stage strong { display:block; margin-bottom:5px; }
+.start-stack { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.flow-card { border:1px solid rgba(148,163,184,.24); border-radius:999px; padding:5px 9px; font-size:.78rem; background:rgba(148,163,184,.03); }
+.flow-stage small { opacity:.72; }
+
+/* Auction outcomes also become a single reading column. */
+.auction-grid { display:grid; grid-template-columns:1fr; gap:9px; margin-top:12px; }
+.auction-card { border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:14px 16px; background:rgba(148,163,184,.035); }
+.auction-top { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(190px,.65fr); gap:14px; align-items:start; }
+.auction-card h3 { margin:0 0 5px; font-size:1rem; }
+.auction-question { font-size:.84rem; opacity:.76; }
+.auction-winner { font-weight:800; margin-bottom:6px; }
+.auction-stats { display:flex; gap:5px; flex-wrap:wrap; }
+.auction-stat { border-radius:999px; border:1px solid rgba(148,163,184,.28); padding:3px 7px; font-size:.70rem; }
+.auction-card details { margin-top:9px; font-size:.82rem; }
 .auction-card summary { cursor:pointer; font-weight:700; }
+
 .result-card { border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:12px 16px; }
 .control-note { border-left:4px solid #2563eb; padding:11px 14px; background:rgba(37,99,235,.07); border-radius:8px; margin:10px 0; }
-.tech-divider { margin-top:24px; padding-top:10px; border-top:1px solid rgba(148,163,184,.25); }
-@media(max-width:1100px){ .kpi-grid{grid-template-columns:repeat(3,1fr)} .peer-grid{grid-template-columns:1fr 1fr} .story-strip{grid-template-columns:1fr} .story-arrow{transform:rotate(90deg);text-align:center} .flow-wrap{grid-template-columns:1fr} .flow-arrow-big{transform:rotate(90deg)} }
-@media(max-width:720px){ .kpi-grid{grid-template-columns:1fr 1fr} .peer-grid,.auction-grid,.start-stack{grid-template-columns:1fr} }
+.tech-divider { margin-top:26px; padding-top:10px; border-top:1px solid rgba(148,163,184,.25); }
+
+@media(max-width:780px){
+    .gradio-container { max-width:100% !important; }
+    .kpi-card { grid-template-columns:1fr; gap:7px; }
+    .peer-card { grid-template-columns:48px 1fr; }
+    .peer-details { grid-column:1 / -1; padding-left:60px; }
+    .auction-top { grid-template-columns:1fr; }
+}
 """
 
 
@@ -125,18 +175,21 @@ def _bid_rows(snapshot: DemoSnapshot) -> list[list[object]]:
 def _kpi_html(snapshot: DemoSnapshot) -> str:
     m = snapshot.mission.metrics
     efficiency = f"{m.allocation_efficiency:.0%}" if m.allocation_efficiency is not None else "—"
-    items = [
-        ("6", "AI peers"),
-        (f"{m.tasks_completed}/5", "work packages"),
-        (str(m.total_bids), "bids submitted"),
-        (str(m.total_messages), "protocol messages"),
-        (f"${m.total_synthetic_execution_cost:,.0f}", "synthetic cost"),
-        (efficiency, "allocation efficiency"),
+    groups = [
+        ("Workforce", ("6", "AI peers"), (f"{m.tasks_completed}/5", "work packages")),
+        ("Marketplace", (str(m.total_bids), "bids submitted"), (str(m.total_messages), "protocol messages")),
+        ("Outcome", (f"${m.total_synthetic_execution_cost:,.0f}", "synthetic cost"), (efficiency, "allocation efficiency")),
     ]
-    return "<div class='kpi-grid'>" + "".join(
-        f"<div class='kpi-card'><div class='kpi-value'>{html.escape(value)}</div><div class='kpi-label'>{html.escape(label)}</div></div>"
-        for value, label in items
-    ) + "</div>"
+    cards = []
+    for topic, left, right in groups:
+        cards.append(
+            "<div class='kpi-card'>"
+            f"<div class='kpi-topic'>{html.escape(topic)}</div>"
+            f"<div class='kpi-pair'><span class='kpi-value'>{html.escape(left[0])}</span><span class='kpi-label'>{html.escape(left[1])}</span></div>"
+            f"<div class='kpi-pair'><span class='kpi-value'>{html.escape(right[0])}</span><span class='kpi-label'>{html.escape(right[1])}</span></div>"
+            "</div>"
+        )
+    return "<div class='kpi-grid'>" + "".join(cards) + "</div>"
 
 
 def _team_html() -> str:
@@ -148,12 +201,12 @@ def _team_html() -> str:
         chips = "".join(f"<span class='chip'>{html.escape(item)}</span>" for item in strengths[:2])
         rendered.append(
             "<div class='peer-card'>"
-            "<div class='peer-head'>"
             f"<div class='peer-avatar'>{icon}</div>"
             f"<div><div class='peer-name'>{html.escape(card.name)}</div><div class='peer-role'>{html.escape(label)} · {html.escape(card.availability)} available</div></div>"
-            "</div>"
+            "<div class='peer-details'>"
             f"<div class='peer-value'>{html.escape(card.business_value)}</div>"
             f"<div class='chip-row'>{chips}</div>"
+            "</div>"
             "</div>"
         )
     return "<div class='peer-grid'>" + "".join(rendered) + "</div>"
@@ -166,14 +219,20 @@ def _auction_story_html(snapshot: DemoSnapshot) -> str:
         icon = TASK_VISUALS.get(card.task, "📌")
         rendered.append(
             "<div class='auction-card'>"
+            "<div class='auction-top'>"
+            "<div>"
             f"<h3>{icon} {html.escape(card.task)}</h3>"
             f"<div class='auction-question'>{html.escape(card.business_question)}</div>"
+            "</div>"
+            "<div>"
             f"<div class='auction-winner'>🏆 {html.escape(card.winner)}</div>"
             "<div class='auction-stats'>"
             f"<span class='auction-stat'>{card.bids} bids</span>"
             f"<span class='auction-stat'>{card.abstentions} abstain</span>"
             f"<span class='auction-stat'>score {html.escape(card.winning_score)}</span>"
             f"<span class='auction-stat'>runner-up {html.escape(card.runner_up)}</span>"
+            "</div>"
+            "</div>"
             "</div>"
             f"<details><summary>Why this peer won</summary><p>{html.escape(card.why_winner)}</p></details>"
             "</div>"
@@ -250,15 +309,12 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
     kpi_html = gr.HTML(DEFAULT_OUTPUTS[0])
 
     gr.HTML("""
-<div class="section-title"><div class="section-kicker">The business case</div><h2>One acquisition question, five work packages</h2></div>
+<div class="section-title"><div class="section-kicker">The business case</div><h2>Follow one decision from buyer to diligence result</h2></div>
 <div class="story-strip">
-  <div class="story-node"><div class="story-icon">🏢</div><strong>Horizon Dynamics</strong><span>Buyer considering whether to advance a fictional acquisition.</span></div>
-  <div class="story-arrow">→</div>
-  <div class="story-node"><div class="story-icon">📦</div><strong>5 diligence jobs</strong><span>Market, finance, risk, verification, and executive synthesis.</span></div>
-  <div class="story-arrow">→</div>
-  <div class="story-node"><div class="story-icon">⚖️</div><strong>AI task marketplace</strong><span>Six peers independently BID or ABSTAIN under the same rules.</span></div>
-  <div class="story-arrow">→</div>
-  <div class="story-node"><div class="story-icon">📋</div><strong>Next-stage decision</strong><span>Validated specialist work becomes an executive diligence package.</span></div>
+  <div class="story-node"><div class="story-head"><div class="story-icon">🏢</div><strong>1 · Horizon Dynamics</strong></div><span>Buyer considering whether to advance a fictional acquisition.</span></div>
+  <div class="story-node"><div class="story-head"><div class="story-icon">📦</div><strong>2 · Five diligence jobs</strong></div><span>Market, finance, risk, verification, and executive synthesis must be completed.</span></div>
+  <div class="story-node"><div class="story-head"><div class="story-icon">⚖️</div><strong>3 · AI task marketplace</strong></div><span>Six peers independently BID or ABSTAIN under the same published rules.</span></div>
+  <div class="story-node"><div class="story-head"><div class="story-icon">📋</div><strong>4 · Next-stage decision</strong></div><span>Validated specialist work becomes an executive diligence package.</span></div>
 </div>
 """)
 
@@ -269,20 +325,14 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
             "The demo is about **allocation authority**, not claiming auctions are always cheaper than centralized assignment."
         )
 
-    gr.HTML("<div class='section-title'><div class='section-kicker'>Meet the team</div><h2>Six peers, overlapping specialties</h2></div>" + _team_html())
+    gr.HTML("<div class='section-title'><div class='section-kicker'>Meet the team</div><h2>Read the roster from top to bottom</h2></div>" + _team_html())
 
     gr.HTML("""
-<div class="section-title"><div class="section-kicker">Work flow</div><h2>Three specialist tasks feed verification, then synthesis</h2></div>
+<div class="section-title"><div class="section-kicker">Work flow</div><h2>The diligence package advances through three stages</h2></div>
 <div class="flow-wrap">
-  <div class="start-stack">
-    <div class="flow-card"><strong>🌐 Market</strong><small>Independent starting task</small></div>
-    <div class="flow-card"><strong>💹 Finance</strong><small>Independent starting task</small></div>
-    <div class="flow-card"><strong>⚠️ Risk</strong><small>Independent starting task</small></div>
-  </div>
-  <div class="flow-arrow-big">→</div>
-  <div class="flow-card"><strong>✅ Verify</strong><small>Checks all three specialist outputs</small></div>
-  <div class="flow-arrow-big">→</div>
-  <div class="flow-card"><strong>📝 Synthesize</strong><small>Creates the executive diligence result</small></div>
+  <div class="flow-stage"><strong>Stage 1 · Specialist analysis</strong><small>Three independent tasks can begin without upstream work.</small><div class="start-stack"><span class="flow-card">🌐 Market</span><span class="flow-card">💹 Finance</span><span class="flow-card">⚠️ Risk</span></div></div>
+  <div class="flow-stage"><strong>Stage 2 · Evidence verification</strong><small>✅ Veritas checks the evidence and lineage behind all three specialist outputs.</small></div>
+  <div class="flow-stage"><strong>Stage 3 · Executive synthesis</strong><small>📝 Validated work is converted into the final next-stage diligence recommendation.</small></div>
 </div>
 """)
 
@@ -295,28 +345,24 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
             "The LLM never selects the winner."
         )
 
-    with gr.Row():
-        mode = gr.Radio(
-            choices=["Deterministic", "LLM-assisted"], value="Deterministic",
-            label="Work-product execution mode",
-            info="Allocation is deterministic in both modes; this changes only how the winner drafts its work product.",
-        )
-        gr.Markdown("**Live LLM runtime:** " + llm_runtime_status() + "\n\n**Core rule:** *Peers decide whether to compete. The protocol decides who wins.*")
-
+    gr.Markdown("### Run the marketplace")
+    mode = gr.Radio(
+        choices=["Deterministic", "LLM-assisted"], value="Deterministic",
+        label="Work-product execution mode",
+        info="Allocation is deterministic in both modes; this changes only how the winner drafts its work product.",
+    )
+    gr.Markdown("**Live LLM runtime:** " + llm_runtime_status() + "  \n**Core rule:** *Peers decide whether to compete. The protocol decides who wins.*")
     run_button = gr.Button("Run the diligence marketplace", variant="primary")
 
-    with gr.Row():
-        mission_status = gr.Markdown(DEFAULT_OUTPUTS[1], elem_classes=["result-card"])
-        with gr.Column():
-            gr.Markdown("**Decision output**")
-            with gr.Accordion("Open executive diligence result", open=False):
-                executive_summary = gr.Markdown(DEFAULT_OUTPUTS[2])
+    mission_status = gr.Markdown(DEFAULT_OUTPUTS[1], elem_classes=["result-card"])
+    with gr.Accordion("Open executive diligence result", open=False):
+        executive_summary = gr.Markdown(DEFAULT_OUTPUTS[2])
 
     gr.HTML("<div class='tech-divider'><div class='section-kicker'>See the result</div><h2>Business story first. Engineering evidence underneath.</h2></div>")
 
     with gr.Tabs():
         with gr.Tab("Business Walkthrough"):
-            gr.Markdown("### Five auctions at a glance\nOpen **Why this peer won** only when you want the scoring detail.")
+            gr.Markdown("### Five auctions, one vertical reading path\nOpen **Why this peer won** only when you want the scoring detail.")
             auction_story = gr.HTML(DEFAULT_OUTPUTS[3])
             with gr.Accordion("Show the compact allocation table", open=False):
                 auction_table = gr.Dataframe(headers=AUCTION_HEADERS, value=DEFAULT_OUTPUTS[4], interactive=False, label="Five awarded work packages")
