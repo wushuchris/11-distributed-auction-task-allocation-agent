@@ -60,16 +60,28 @@ EVENT_VISUALS = {
     "Reauction Announcement": "🔁",
     "Escalation": "⚠️",
 }
-PLAYBACK_DELAY_SECONDS = 0.10
+
+# The demo is intentionally paced for human observation. The protocol itself is
+# not slowed; only the presentation replay waits between yielded UI frames.
+PLAYBACK_DELAY_SECONDS = 0.22
+EVENT_DELAY_MULTIPLIERS = {
+    "Task Announcement": 2.2,
+    "Bid": 1.0,
+    "Bid Abstention": 1.0,
+    "Auction Closed": 1.6,
+    "Task Award": 2.6,
+    "Task Accepted": 1.5,
+    "Task Result": 2.8,
+    "Task Failure": 2.8,
+    "Reauction Announcement": 2.4,
+    "Escalation": 3.0,
+}
 
 APP_CSS = """
 .gradio-container { max-width: 980px !important; }
 .hero-card {
-    border:1px solid rgba(148,163,184,.28);
-    border-radius:24px;
-    padding:28px 30px;
-    margin-bottom:16px;
-    background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(16,185,129,.08));
+    border:1px solid rgba(148,163,184,.28); border-radius:24px; padding:28px 30px;
+    margin-bottom:16px; background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(16,185,129,.08));
 }
 .hero-card h1 { margin:6px 0 8px; font-size:2.08rem; line-height:1.14; max-width:820px; }
 .hero-card p { margin:0; font-size:1.06rem; line-height:1.5; max-width:790px; opacity:.92; }
@@ -77,24 +89,13 @@ APP_CSS = """
 .section-title { margin:30px 0 10px; }
 .section-title h2 { margin:3px 0; font-size:1.58rem; line-height:1.25; }
 
-/* Vertical mission snapshot: three rows instead of six side-by-side tiles. */
 .kpi-grid { display:grid; grid-template-columns:1fr; gap:9px; margin:14px 0 24px; }
-.kpi-card {
-    display:grid;
-    grid-template-columns:minmax(145px,.75fr) 1fr 1fr;
-    gap:14px;
-    align-items:center;
-    border:1px solid rgba(148,163,184,.25);
-    border-radius:15px;
-    padding:13px 16px;
-    background:rgba(148,163,184,.035);
-}
+.kpi-card { display:grid; grid-template-columns:minmax(145px,.75fr) 1fr 1fr; gap:14px; align-items:center; border:1px solid rgba(148,163,184,.25); border-radius:15px; padding:13px 16px; background:rgba(148,163,184,.035); }
 .kpi-topic { font-size:.84rem; font-weight:770; letter-spacing:.05em; text-transform:uppercase; opacity:.70; }
 .kpi-pair { display:flex; align-items:baseline; gap:8px; }
 .kpi-value { font-size:1.32rem; font-weight:800; line-height:1; }
 .kpi-label { font-size:.86rem; opacity:.76; }
 
-/* One obvious top-to-bottom business path. */
 .story-strip { position:relative; display:grid; grid-template-columns:1fr; gap:10px; margin:12px 0 18px; padding-left:42px; }
 .story-strip::before { content:""; position:absolute; left:17px; top:22px; bottom:22px; width:2px; background:rgba(37,99,235,.20); }
 .story-node { position:relative; border:1px solid rgba(148,163,184,.25); border-radius:15px; padding:15px 17px; background:rgba(148,163,184,.035); }
@@ -104,19 +105,8 @@ APP_CSS = """
 .story-node strong { font-size:1.06rem; }
 .story-node span { display:block; font-size:.97rem; opacity:.82; line-height:1.45; }
 
-/* Vertical roster removes 3x2 eye jumps. */
 .peer-grid { display:grid; grid-template-columns:1fr; gap:9px; margin:12px 0 18px; }
-.peer-card {
-    display:grid;
-    grid-template-columns:50px minmax(180px,.75fr) 1.35fr;
-    gap:13px;
-    align-items:center;
-    border:1px solid rgba(148,163,184,.25);
-    border-radius:16px;
-    padding:14px 16px;
-    background:rgba(148,163,184,.035);
-}
-.peer-head { display:contents; }
+.peer-card { display:grid; grid-template-columns:50px minmax(180px,.75fr) 1.35fr; gap:13px; align-items:center; border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:14px 16px; background:rgba(148,163,184,.035); }
 .peer-avatar { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:1.34rem; background:rgba(37,99,235,.10); border:1px solid rgba(37,99,235,.20); }
 .peer-name { font-size:1.06rem; font-weight:800; line-height:1.15; }
 .peer-role { font-size:.89rem; opacity:.76; margin-top:4px; }
@@ -125,7 +115,6 @@ APP_CSS = """
 .chip-row { display:flex; gap:6px; flex-wrap:wrap; }
 .chip { border:1px solid rgba(148,163,184,.30); border-radius:999px; padding:4px 8px; font-size:.78rem; opacity:.90; }
 
-/* Vertical dependency timeline instead of left-to-right arrows. */
 .flow-wrap { position:relative; display:grid; grid-template-columns:1fr; gap:9px; margin:12px 0 18px; padding-left:42px; }
 .flow-wrap::before { content:""; position:absolute; left:17px; top:25px; bottom:25px; width:2px; background:rgba(16,185,129,.23); }
 .flow-stage { position:relative; border:1px solid rgba(148,163,184,.25); border-radius:15px; padding:15px 17px; background:rgba(148,163,184,.035); }
@@ -135,14 +124,19 @@ APP_CSS = """
 .start-stack { display:flex; gap:7px; flex-wrap:wrap; margin-top:9px; }
 .flow-card { border:1px solid rgba(148,163,184,.24); border-radius:999px; padding:6px 10px; font-size:.86rem; background:rgba(148,163,184,.03); }
 
-/* Live protocol playback makes execution visible instead of showing only a spinner. */
+/* Live protocol playback */
 .activity-shell { border:1px solid rgba(37,99,235,.26); border-radius:18px; padding:16px 18px; margin:14px 0 12px; background:linear-gradient(135deg,rgba(37,99,235,.09),rgba(16,185,129,.035)); }
 .activity-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:10px; }
+.activity-title-row { display:flex; align-items:center; gap:9px; }
 .activity-title { font-size:1.04rem; font-weight:800; }
 .activity-subtitle { font-size:.91rem; line-height:1.4; opacity:.78; margin-top:3px; }
 .activity-count { flex:0 0 auto; font-size:.82rem; font-weight:750; border:1px solid rgba(148,163,184,.28); border-radius:999px; padding:5px 9px; }
+.activity-spinner { width:18px; height:18px; box-sizing:border-box; border:3px solid rgba(37,99,235,.18); border-top-color:#2563eb; border-radius:50%; animation:activity-spin .8s linear infinite; flex:0 0 auto; }
+@keyframes activity-spin { to { transform:rotate(360deg); } }
 .activity-progress { height:7px; border-radius:999px; overflow:hidden; background:rgba(148,163,184,.16); margin-bottom:12px; }
-.activity-progress > span { display:block; height:100%; background:linear-gradient(90deg,#2563eb,#10b981); transition:width .18s ease; }
+.activity-progress > span { display:block; height:100%; background:linear-gradient(90deg,#2563eb,#10b981); transition:width .24s ease; }
+.activity-progress.indeterminate > span { width:34%; animation:activity-slide 1.05s ease-in-out infinite; }
+@keyframes activity-slide { 0% { transform:translateX(-110%); } 50% { transform:translateX(190%); } 100% { transform:translateX(-110%); } }
 .activity-feed { display:grid; gap:7px; }
 .activity-event { display:grid; grid-template-columns:32px minmax(0,1fr); gap:9px; align-items:start; border-top:1px solid rgba(148,163,184,.16); padding-top:8px; }
 .activity-event:first-child { border-top:0; padding-top:0; }
@@ -154,7 +148,6 @@ APP_CSS = """
 .activity-detail { font-size:.82rem; opacity:.77; margin-top:3px; line-height:1.35; }
 .activity-complete { border-color:rgba(16,185,129,.32); background:linear-gradient(135deg,rgba(16,185,129,.10),rgba(37,99,235,.04)); }
 
-/* Auction outcomes also become a single reading column. */
 .auction-grid { display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
 .auction-card { border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:16px 18px; background:rgba(148,163,184,.035); }
 .auction-top { display:grid; grid-template-columns:minmax(0,1.28fr) minmax(210px,.72fr); gap:16px; align-items:start; }
@@ -228,9 +221,8 @@ def _kpi_html(snapshot: DemoSnapshot) -> str:
 
 
 def _team_html() -> str:
-    cards = build_peer_story_cards()
     rendered = []
-    for card in cards:
+    for card in build_peer_story_cards():
         icon, label = PEER_VISUALS[card.name]
         strengths = [part.strip() for part in card.strengths.split("·")]
         chips = "".join(f"<span class='chip'>{html.escape(item)}</span>" for item in strengths[:2])
@@ -241,8 +233,7 @@ def _team_html() -> str:
             "<div class='peer-details'>"
             f"<div class='peer-value'>{html.escape(card.business_value)}</div>"
             f"<div class='chip-row'>{chips}</div>"
-            "</div>"
-            "</div>"
+            "</div></div>"
         )
     return "<div class='peer-grid'>" + "".join(rendered) + "</div>"
 
@@ -253,24 +244,16 @@ def _auction_story_html(snapshot: DemoSnapshot) -> str:
     for card in cards:
         icon = TASK_VISUALS.get(card.task, "📌")
         rendered.append(
-            "<div class='auction-card'>"
-            "<div class='auction-top'>"
-            "<div>"
+            "<div class='auction-card'><div class='auction-top'><div>"
             f"<h3>{icon} {html.escape(card.task)}</h3>"
-            f"<div class='auction-question'>{html.escape(card.business_question)}</div>"
-            "</div>"
-            "<div>"
-            f"<div class='auction-winner'>🏆 {html.escape(card.winner)}</div>"
-            "<div class='auction-stats'>"
+            f"<div class='auction-question'>{html.escape(card.business_question)}</div></div><div>"
+            f"<div class='auction-winner'>🏆 {html.escape(card.winner)}</div><div class='auction-stats'>"
             f"<span class='auction-stat'>{card.bids} bids</span>"
             f"<span class='auction-stat'>{card.abstentions} abstain</span>"
             f"<span class='auction-stat'>score {html.escape(card.winning_score)}</span>"
             f"<span class='auction-stat'>runner-up {html.escape(card.runner_up)}</span>"
-            "</div>"
-            "</div>"
-            "</div>"
-            f"<details><summary>Why this peer won</summary><p>{html.escape(card.why_winner)}</p></details>"
-            "</div>"
+            "</div></div></div>"
+            f"<details><summary>Why this peer won</summary><p>{html.escape(card.why_winner)}</p></details></div>"
         )
     return "<div class='auction-grid'>" + "".join(rendered) + "</div>"
 
@@ -299,23 +282,23 @@ def _raw_snapshot(snapshot: DemoSnapshot) -> dict[str, object]:
 
 def _idle_activity_html() -> str:
     return (
-        "<div class='activity-shell'>"
-        "<div class='activity-head'><div><div class='activity-title'>▶ Live Marketplace Activity</div>"
-        "<div class='activity-subtitle'>Click <b>Run the diligence marketplace</b> to watch task announcements, peer bids, abstentions, awards, and results appear here.</div></div>"
-        "<div class='activity-count'>Ready</div></div>"
-        "<div class='activity-progress'><span style='width:0%'></span></div>"
-        "</div>"
+        "<div class='activity-shell'><div class='activity-head'><div>"
+        "<div class='activity-title'>▶ Live Marketplace Activity</div>"
+        "<div class='activity-subtitle'>Click <b>Run the diligence marketplace</b> to watch task announcements, peer bids, abstentions, awards, and results appear here.</div>"
+        "</div><div class='activity-count'>Ready</div></div>"
+        "<div class='activity-progress'><span style='width:0%'></span></div></div>"
     )
 
 
 def _starting_activity_html(mode: DemoMode) -> str:
     mode_name = "LLM-assisted" if mode is DemoMode.LLM_ASSISTED else "Deterministic"
     return (
-        "<div class='activity-shell'>"
-        "<div class='activity-head'><div><div class='activity-title'>⚙️ Starting marketplace</div>"
-        f"<div class='activity-subtitle'>{html.escape(mode_name)} work-product execution selected. The allocation protocol is preparing the first task auction.</div></div>"
-        "<div class='activity-count'>Starting</div></div>"
-        "<div class='activity-progress'><span style='width:2%'></span></div>"
+        "<div class='activity-shell'><div class='activity-head'><div>"
+        "<div class='activity-title-row'><span class='activity-spinner'></span><div class='activity-title'>Starting marketplace · working…</div></div>"
+        f"<div class='activity-subtitle'>{html.escape(mode_name)} work-product execution selected. The system is computing the mission before replaying its audited protocol events.</div>"
+        "</div><div class='activity-count'>Working</div></div>"
+        "<div class='activity-progress indeterminate'><span></span></div>"
+        "<div class='activity-subtitle'>The moving gear and bar mean the run is still active even if no new protocol message is available yet.</div>"
         "</div>"
     )
 
@@ -335,6 +318,12 @@ def _event_action(event_name: str) -> str:
     }.get(event_name, event_name.lower())
 
 
+def _playback_delay_for_event(event_name: str, base_delay: float = PLAYBACK_DELAY_SECONDS) -> float:
+    if base_delay <= 0:
+        return 0.0
+    return base_delay * EVENT_DELAY_MULTIPLIERS.get(event_name, 1.0)
+
+
 def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool = False) -> str:
     total = max(len(snapshot.event_rows), 1)
     event_count = max(0, min(event_count, len(snapshot.event_rows)))
@@ -344,22 +333,22 @@ def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool =
 
     if event_count:
         current = snapshot.event_rows[event_count - 1]
-        current_task = current.task
-        current_phase = current.event
+        current_task, current_phase = current.task, current.event
     else:
-        current_task = "Preparing first auction"
-        current_phase = "Starting"
+        current_task, current_phase = "Preparing first auction", "Starting"
 
     if complete:
         title = "✅ Marketplace run complete"
         subtitle = f"{snapshot.mission.metrics.tasks_completed}/5 work packages completed. Final results are now published below."
         counter = f"{len(snapshot.event_rows)} messages"
         shell_class = "activity-shell activity-complete"
+        title_html = f"<div class='activity-title'>{html.escape(title)}</div>"
     else:
-        title = f"⚡ Live Marketplace Activity · {current_task}"
+        title = f"Live Marketplace Activity · {current_task}"
         subtitle = f"Phase: {current_phase} · Completed work packages: {completed_tasks}/5"
         counter = f"{event_count}/{len(snapshot.event_rows)} messages"
         shell_class = "activity-shell"
+        title_html = f"<div class='activity-title-row'><span class='activity-spinner'></span><div class='activity-title'>⚡ {html.escape(title)}</div></div>"
 
     rendered = []
     for index, row in enumerate(visible_events):
@@ -367,43 +356,28 @@ def _activity_html(snapshot: DemoSnapshot, event_count: int, *, complete: bool =
         actor = row.actor if row.actor != "—" else "Protocol"
         latest = " latest" if index == len(visible_events) - 1 and not complete else ""
         rendered.append(
-            f"<div class='activity-event{latest}'>"
-            f"<div class='activity-icon'>{icon}</div>"
-            "<div>"
+            f"<div class='activity-event{latest}'><div class='activity-icon'>{icon}</div><div>"
             f"<div class='activity-main'><strong>{html.escape(actor)}</strong> {_event_action(row.event)} · {html.escape(row.task)}</div>"
             f"<div class='activity-meta'>Round {row.round} · Message {row.sequence} · {html.escape(row.event)}</div>"
-            f"<div class='activity-detail'>{html.escape(row.detail)}</div>"
-            "</div></div>"
+            f"<div class='activity-detail'>{html.escape(row.detail)}</div></div></div>"
         )
 
     feed = "".join(rendered) or "<div class='activity-subtitle'>Waiting for the first protocol message…</div>"
     return (
-        f"<div class='{shell_class}'>"
-        "<div class='activity-head'><div>"
-        f"<div class='activity-title'>{title}</div>"
-        f"<div class='activity-subtitle'>{html.escape(subtitle)}</div>"
-        "</div>"
+        f"<div class='{shell_class}'><div class='activity-head'><div>{title_html}"
+        f"<div class='activity-subtitle'>{html.escape(subtitle)}</div></div>"
         f"<div class='activity-count'>{html.escape(counter)}</div></div>"
         f"<div class='activity-progress'><span style='width:{progress}%'></span></div>"
-        f"<div class='activity-feed'>{feed}</div>"
-        "</div>"
+        f"<div class='activity-feed'>{feed}</div></div>"
     )
 
 
 def _outputs_for_snapshot(snapshot: DemoSnapshot):
     return (
-        _kpi_html(snapshot),
-        _mission_status(snapshot),
-        snapshot.executive_summary,
-        _auction_story_html(snapshot),
-        _auction_rows(snapshot),
-        _bid_rows(snapshot),
-        _work_rows(snapshot),
-        _architecture_rows(snapshot),
-        snapshot.stress_summary,
-        _stress_rows(snapshot),
-        _event_rows(snapshot),
-        _raw_snapshot(snapshot),
+        _kpi_html(snapshot), _mission_status(snapshot), snapshot.executive_summary,
+        _auction_story_html(snapshot), _auction_rows(snapshot), _bid_rows(snapshot),
+        _work_rows(snapshot), _architecture_rows(snapshot), snapshot.stress_summary,
+        _stress_rows(snapshot), _event_rows(snapshot), _raw_snapshot(snapshot),
     )
 
 
@@ -412,12 +386,10 @@ def _run_from_ui(mode_label: str):
     snapshot, error = safe_run_demo(mode)
     if snapshot is None:
         return (
-            "",
-            "### Mission not started\n" + (error or "Live model configuration is unavailable."),
+            "", "### Mission not started\n" + (error or "Live model configuration is unavailable."),
             "### No business result published\nChoose **Deterministic** to run the complete marketplace without a model provider.",
             "<div class='control-note'>Marketplace did not start, so there are no auction results to display.</div>",
-            [], [], [], [], "", [], [],
-            {"error": error, "mode": mode.value},
+            [], [], [], [], "", [], [], {"error": error, "mode": mode.value},
         )
     return _outputs_for_snapshot(snapshot)
 
@@ -428,17 +400,21 @@ def _running_outputs(mode: DemoMode):
         "### Mission running…\nWatch **Live Marketplace Activity** above for the current task and protocol phase.",
         "### Executive result pending\nThe final diligence synthesis will publish only after the work chain completes.",
         "<div class='control-note'>Auction outcomes will publish after the live protocol playback.</div>",
-        [], [], [], [], "", [], [],
-        {"status": "running", "mode": mode.value},
+        [], [], [], [], "", [], [], {"status": "running", "mode": mode.value},
     )
 
 
 def _stream_run_from_ui(mode_label: str, playback_delay: float = PLAYBACK_DELAY_SECONDS):
-    """Yield visible protocol playback frames before publishing final mission outputs."""
+    """Yield human-paced protocol playback frames before publishing final outputs."""
 
     mode = DemoMode.LLM_ASSISTED if mode_label == "LLM-assisted" else DemoMode.DETERMINISTIC
     running = _running_outputs(mode)
     yield (_starting_activity_html(mode), *running)
+
+    # Give the browser a brief chance to paint the animated running state before
+    # the synchronous mission computation begins.
+    if playback_delay > 0:
+        time.sleep(min(0.18, playback_delay))
 
     snapshot, error = safe_run_demo(mode)
     if snapshot is None:
@@ -452,10 +428,11 @@ def _stream_run_from_ui(mode_label: str, playback_delay: float = PLAYBACK_DELAY_
         yield (error_activity, *failed)
         return
 
-    for event_count in range(1, len(snapshot.event_rows) + 1):
+    for event_count, row in enumerate(snapshot.event_rows, start=1):
         yield (_activity_html(snapshot, event_count), *running)
-        if playback_delay > 0:
-            time.sleep(playback_delay)
+        delay = _playback_delay_for_event(row.event, playback_delay)
+        if delay > 0:
+            time.sleep(delay)
 
     yield (_activity_html(snapshot, len(snapshot.event_rows), complete=True), *_outputs_for_snapshot(snapshot))
 
@@ -507,8 +484,7 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
             "**1. Announce** the task and constraints → **2. Peers choose BID or ABSTAIN** → "
             "**3. Valid bids are scored** → **4. Winner executes**. If an awarded peer explicitly fails, "
             "the protocol allows one bounded reauction before escalation.\n\n"
-            "**Score:** 45% capability + 25% confidence + 20% availability + 10% cost efficiency. "
-            "The LLM never selects the winner."
+            "**Score:** 45% capability + 25% confidence + 20% availability + 10% cost efficiency. The LLM never selects the winner."
         )
 
     gr.Markdown("### Run the marketplace")
@@ -564,6 +540,7 @@ with gr.Blocks(title="Agent 11 — Distributed Auction Task Allocation", analyti
         fn=_stream_run_from_ui,
         inputs=[mode],
         outputs=[live_activity, kpi_html, mission_status, executive_summary, auction_story, auction_table, bid_table, work_table, architecture_table, stress_summary, stress_table, event_table, raw_snapshot],
+        show_progress="minimal",
     )
 
 if __name__ == "__main__":
