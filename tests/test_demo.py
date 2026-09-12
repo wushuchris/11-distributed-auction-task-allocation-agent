@@ -140,29 +140,52 @@ def test_safe_llm_demo_reports_missing_configuration_without_starting() -> None:
     assert "HF_TOKEN" in error or "MODEL_ID" in error
 
 
-def test_app_imports_and_builds_gradio_blocks() -> None:
+def test_app_imports_and_builds_visual_business_first_blocks() -> None:
     app = importlib.import_module("app")
 
     assert app.demo is not None
     assert app.DEFAULT_SNAPSHOT.mission.metrics.mission_success is True
-    assert len(app.DEFAULT_OUTPUTS) == 11
-    assert "What happened in the marketplace" in app.DEFAULT_OUTPUTS[2]
-    assert len(app.DEFAULT_OUTPUTS[4]) == 30
+    assert len(app.DEFAULT_OUTPUTS) == 12
+    assert "kpi-grid" in app.DEFAULT_OUTPUTS[0]
+    assert "6" in app.DEFAULT_OUTPUTS[0]
+    assert "auction-grid" in app.DEFAULT_OUTPUTS[3]
+    assert "Atlas Research" in app.DEFAULT_OUTPUTS[3]
+    assert len(app.DEFAULT_OUTPUTS[5]) == 30
 
 
-def test_ui_deterministic_run_returns_business_first_outputs() -> None:
+def test_visual_team_cards_are_compact_and_cover_all_peers() -> None:
+    app = importlib.import_module("app")
+    team = app._team_html()
+
+    assert team.count("peer-card") == 6
+    for name in [
+        "Atlas Research",
+        "Ledger Analyst",
+        "Sentinel Risk",
+        "Veritas Evidence",
+        "Mosaic Generalist",
+        "Quill Synthesis",
+    ]:
+        assert name in team
+    assert "peer-avatar" in team
+    assert "chip-row" in team
+
+
+def test_ui_deterministic_run_returns_visual_business_first_outputs() -> None:
     app = importlib.import_module("app")
 
     outputs = app._run_from_ui("Deterministic")
 
-    assert len(outputs) == 11
-    assert "Due-diligence mission completed" in outputs[0]
-    assert "Executive due-diligence result" in outputs[1]
-    assert "Market Attractiveness Research" in outputs[2]
-    assert len(outputs[3]) == 5
-    assert len(outputs[4]) == 30
-    assert len(outputs[5]) == 5
-    assert len(outputs[6]) == 2
-    assert len(outputs[8]) == 9
-    assert len(outputs[9]) == 50
-    assert outputs[10]["mission_success"] is True
+    assert len(outputs) == 12
+    assert "kpi-grid" in outputs[0]
+    assert "Mission completed" in outputs[1]
+    assert "Executive due-diligence result" in outputs[2]
+    assert "Market Attractiveness Research" in outputs[3]
+    assert "Why this peer won" in outputs[3]
+    assert len(outputs[4]) == 5
+    assert len(outputs[5]) == 30
+    assert len(outputs[6]) == 5
+    assert len(outputs[7]) == 2
+    assert len(outputs[9]) == 9
+    assert len(outputs[10]) == 50
+    assert outputs[11]["mission_success"] is True
