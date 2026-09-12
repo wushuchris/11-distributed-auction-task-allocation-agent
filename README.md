@@ -17,7 +17,7 @@ Distributed multi-agent task allocation using typed auctions, deterministic bidd
 
 ## Status
 
-**Engineering production-validated; final demo presentation review in progress.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, test-gated deployment path, and live Hugging Face runtime have all been validated. The current automated suite passes **142 tests**, and both deterministic and live LLM-assisted production checks completed successfully. The remaining closeout item is final approval of the redesigned business-first demo experience.
+**Engineering production-validated; final demo presentation review in progress.** The deterministic mission, centralized comparison baseline, stress evaluation harness, bounded LLM work handlers, test-gated deployment path, and live Hugging Face runtime have all been validated. The current automated suite passes **150 tests**, and both deterministic and live LLM-assisted production checks completed successfully. The remaining closeout item is final approval of the redesigned business-first demo experience.
 
 ## Problem
 
@@ -152,7 +152,7 @@ Deterministic mode is the safe default. LLM-assisted mode changes the substantiv
 Current automated test result:
 
 ```text
-142 passed
+150 passed
 ```
 
 The public Hugging Face Space was manually validated in both:
