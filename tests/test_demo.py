@@ -151,6 +151,7 @@ def test_app_imports_and_builds_visual_business_first_blocks() -> None:
     assert "auction-grid" in app.DEFAULT_OUTPUTS[3]
     assert "Atlas Research" in app.DEFAULT_OUTPUTS[3]
     assert len(app.DEFAULT_OUTPUTS[5]) == 30
+    assert "Live Marketplace Activity" in app._idle_activity_html()
 
 
 def test_visual_team_cards_are_compact_and_cover_all_peers() -> None:
@@ -189,3 +190,35 @@ def test_ui_deterministic_run_returns_visual_business_first_outputs() -> None:
     assert len(outputs[9]) == 9
     assert len(outputs[10]) == 50
     assert outputs[11]["mission_success"] is True
+
+
+def test_live_activity_frames_are_derived_from_real_protocol_events() -> None:
+    app = importlib.import_module("app")
+    snapshot = app.DEFAULT_SNAPSHOT
+
+    first = app._activity_html(snapshot, 1)
+    tenth = app._activity_html(snapshot, 10)
+    final = app._activity_html(snapshot, len(snapshot.event_rows), complete=True)
+
+    assert "Task Announcement" in first
+    assert "Market Attractiveness" in first
+    assert "1/50 messages" in first
+    assert "10/50 messages" in tenth
+    assert "Marketplace run complete" in final
+    assert "50 messages" in final
+
+
+def test_streaming_ui_yields_start_protocol_frames_and_final_results() -> None:
+    app = importlib.import_module("app")
+
+    frames = list(app._stream_run_from_ui("Deterministic", playback_delay=0))
+
+    assert len(frames) == len(app.DEFAULT_SNAPSHOT.event_rows) + 2
+    assert len(frames[0]) == 13
+    assert "Starting marketplace" in frames[0][0]
+    assert "status" in frames[0][-1]
+    assert "Live Marketplace Activity" in frames[1][0]
+    assert "1/50 messages" in frames[1][0]
+    assert "Marketplace run complete" in frames[-1][0]
+    assert "Mission completed" in frames[-1][2]
+    assert frames[-1][-1]["mission_success"] is True
